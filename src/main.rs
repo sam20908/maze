@@ -2,8 +2,10 @@ use colored::*;
 use rand::distributions::{Bernoulli, Distribution};
 use rand::{thread_rng, Rng};
 
-const WIDTH: usize = 40usize; // at least 3
-const HEIGHT: usize = 40usize; // at least 3
+use std::collections::VecDeque;
+
+const WIDTH: usize = 25usize; // at least 3
+const HEIGHT: usize = 25usize; // at least 3
 
 type MazeArray = [[char; WIDTH]; HEIGHT];
 type Position = (usize, usize);
@@ -42,71 +44,75 @@ fn gen_maze() -> (MazeArray, Position, Position) {
     (maze, (start, 0), (end, WIDTH - 1))
 }
 
-fn dfs(
-    maze: &MazeArray,
-    vis: &mut [[bool; WIDTH]; HEIGHT],
-    pos: Position,
-    end: Position,
-    path: &mut Path,
-) -> bool {
-    if pos == end {
-        path.push(pos);
-        return true;
-    }
-    if maze[pos.0][pos.1] == '#' {
-        return false;
-    }
-    vis[pos.0][pos.1] = true;
-
-    if pos.1 > 0 {
-        if !vis[pos.0][pos.1 - 1] && dfs(maze, vis, (pos.0, pos.1 - 1), end, path) {
-            path.push(pos);
-            return true;
-        }
-    }
-    if !vis[pos.0][pos.1 + 1] && dfs(maze, vis, (pos.0, pos.1 + 1), end, path) {
-        path.push(pos);
-        return true;
-    }
-    if !vis[pos.0 - 1][pos.1] && dfs(maze, vis, (pos.0 - 1, pos.1), end, path) {
-        path.push(pos);
-        return true;
-    }
-    if !vis[pos.0 + 1][pos.1] && dfs(maze, vis, (pos.0 + 1, pos.1), end, path) {
-        path.push(pos);
-        return true;
-    }
-
-    false
-}
-
 fn solve(maze: &MazeArray, start: Position, end: Position) -> Option<Path> {
-    let mut path = Path::default();
+    let mut solvable = false;
+
+    let mut pred = [[(usize::MAX, usize::MAX); WIDTH]; HEIGHT];
     let mut vis = [[false; WIDTH]; HEIGHT];
 
-    if !dfs(maze, &mut vis, start, end, &mut path) {
-        None
-    } else {
+    let mut dist = 0;
+    let mut q = VecDeque::new();
+    q.push_back(start);
+
+    while !q.is_empty() && !solvable {
+        let mut s = q.len();
+        while s > 0 {
+            s -= 1;
+
+            let pos = q.pop_front().unwrap();
+            let (r, c) = pos;
+            if pos == end {
+                solvable = true;
+                break;
+            }
+            vis[r][c] = true;
+
+            if maze[r][c + 1] == '.' && !vis[r][c + 1] {
+                pred[r][c + 1] = pos;
+                q.push_back((r, c + 1));
+            }
+            if maze[r - 1][c] == '.' && !vis[r - 1][c] {
+                pred[r - 1][c] = pos;
+                q.push_back((r - 1, c));
+            }
+            if maze[r + 1][c] == '.' && !vis[r + 1][c] {
+                pred[r + 1][c] = pos;
+                q.push_back((r + 1, c));
+            }
+            if pos != start && maze[r][c - 1] == '.' && !vis[r][c - 1] {
+                pred[r][c - 1] = pos;
+                q.push_back((r, c - 1));
+            }
+        }
+
+        dist += 1;
+    }
+
+    if solvable {
+        let mut path = Vec::with_capacity(dist);
+        let mut pos = end;
+        while pred[pos.0][pos.1] != (usize::MAX, usize::MAX) {
+            path.push(pos);
+            pos = pred[pos.0][pos.1];
+        }
+        path.push(start);
+
         Some(path)
+    } else {
+        None
     }
 }
 
 fn main() {
-    let mut maze = [['#'; WIDTH]; HEIGHT];
-    let mut path: Path = Path::default();
-    let mut found = false;
-    while !found {
-        let (maze2, start, end) = gen_maze();
-        let solution = solve(&maze2, start, end);
-        if let Some(path2) = solution {
-            found = true;
-            maze = maze2;
-            path = path2;
+    loop {
+        let (mut maze, start, end) = gen_maze();
+        if let Some(path) = solve(&maze, start, end) {
+            for (x, y) in path {
+                maze[x][y] = '+';
+            }
+            print_maze(&maze);
+
+            break;
         }
     }
-
-    for (x, y) in path {
-        maze[x][y] = '+';
-    }
-    print_maze(&maze);
 }
