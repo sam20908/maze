@@ -2,8 +2,8 @@ use rand::distributions::{Bernoulli, Distribution};
 use rand::{thread_rng, Rng};
 use std::collections::VecDeque;
 
-const WIDTH: usize = 100usize; // at least 3
-const HEIGHT: usize = 100usize; // at least 3
+const WIDTH: usize = 50usize; // at least 3
+const HEIGHT: usize = 45usize; // at least 3
 
 type MazeArray = [[bool; WIDTH]; HEIGHT];
 type Position = (usize, usize);
@@ -22,7 +22,7 @@ fn print_maze(maze: &MazeArray) {
 }
 
 fn gen_maze() -> (MazeArray, Position, Position) {
-    let mut maze = [[false; WIDTH]; HEIGHT]; // true indicates wall, false indicates clear path
+    let mut maze = [[false; WIDTH]; HEIGHT]; // false indicates wall, true indicates clear path
 
     let start = thread_rng().gen_range(1, HEIGHT - 1);
     let end = thread_rng().gen_range(1, HEIGHT - 1);
