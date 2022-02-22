@@ -2,8 +2,8 @@ use rand::distributions::{Bernoulli, Distribution};
 use rand::{thread_rng, Rng};
 use std::collections::VecDeque;
 
-const WIDTH: usize = 10usize; // at least 3
-const HEIGHT: usize = 10usize; // at least 3
+const WIDTH: usize = 100usize; // at least 3
+const HEIGHT: usize = 100usize; // at least 3
 
 type MazeArray = [[bool; WIDTH]; HEIGHT];
 type Position = (usize, usize);
@@ -22,7 +22,7 @@ fn print_maze(maze: &MazeArray) {
 }
 
 fn gen_maze() -> (MazeArray, Position, Position) {
-    let mut maze = MazeArray::default(); // true indicates wall, false indicates clear path
+    let mut maze = [[false; WIDTH]; HEIGHT]; // true indicates wall, false indicates clear path
 
     let start = thread_rng().gen_range(1, HEIGHT - 1);
     let end = thread_rng().gen_range(1, HEIGHT - 1);
@@ -39,7 +39,7 @@ fn gen_maze() -> (MazeArray, Position, Position) {
     (maze, (start, 0), (end, WIDTH - 1))
 }
 
-fn solve_impl(
+fn dfs(
     maze: &MazeArray,
     vis: &mut MazeArray,
     pos: Position,
@@ -56,20 +56,20 @@ fn solve_impl(
     vis[pos.0][pos.1] = true;
 
     if pos.1 > 0 {
-        if !vis[pos.0][pos.1 - 1] && solve_impl(maze, vis, (pos.0, pos.1 - 1), end, path) {
+        if !vis[pos.0][pos.1 - 1] && dfs(maze, vis, (pos.0, pos.1 - 1), end, path) {
             path.push_front(pos);
             return true;
         }
     }
-    if !vis[pos.0][pos.1 + 1] && solve_impl(maze, vis, (pos.0, pos.1 + 1), end, path) {
+    if !vis[pos.0][pos.1 + 1] && dfs(maze, vis, (pos.0, pos.1 + 1), end, path) {
         path.push_front(pos);
         return true;
     }
-    if !vis[pos.0 - 1][pos.1] && solve_impl(maze, vis, (pos.0 - 1, pos.1), end, path) {
+    if !vis[pos.0 - 1][pos.1] && dfs(maze, vis, (pos.0 - 1, pos.1), end, path) {
         path.push_front(pos);
         return true;
     }
-    if !vis[pos.0 + 1][pos.1] && solve_impl(maze, vis, (pos.0 + 1, pos.1), end, path) {
+    if !vis[pos.0 + 1][pos.1] && dfs(maze, vis, (pos.0 + 1, pos.1), end, path) {
         path.push_front(pos);
         return true;
     }
@@ -79,9 +79,9 @@ fn solve_impl(
 
 fn solve(maze: &MazeArray, start: Position, end: Position) -> Option<Path> {
     let mut path = Path::default();
-    let mut vis = MazeArray::default();
+    let mut vis = [[false; WIDTH]; HEIGHT];
 
-    if !solve_impl(maze, &mut vis, start, end, &mut path) {
+    if !dfs(maze, &mut vis, start, end, &mut path) {
         None
     } else {
         Some(path)
@@ -89,7 +89,7 @@ fn solve(maze: &MazeArray, start: Position, end: Position) -> Option<Path> {
 }
 
 fn main() {
-    let mut maze = MazeArray::default();
+    let mut maze = [[false; WIDTH]; HEIGHT];
     let mut path: Path = Path::default();
     let mut found = false;
     while !found {
