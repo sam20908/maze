@@ -7,7 +7,7 @@ use std::collections::{HashSet, VecDeque};
 const WIDTH: usize = 50usize; // at least 3
 const HEIGHT: usize = 50usize; // at least 3
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 enum Direction {
     LEFT,
     RIGHT,
@@ -22,15 +22,25 @@ const DIRECTION_ARRAY: [Direction; 4] = [
     Direction::DOWN,
 ];
 
-fn print_maze(maze: &Vec<bool>, path: &Vec<usize>) {
+// fn print_maze(maze: &Vec<bool>, path: &Vec<usize>) {
+//     for i in 0..HEIGHT {
+//         for j in 0..WIDTH {
+//             let i = i * HEIGHT + j;
+//             if path.contains(&i) {
+//                 print!("{} ", "+".yellow());
+//             } else {
+//                 print!("{} ", if maze[i] { '.' } else { '#' });
+//             }
+//         }
+//         println!("");
+//     }
+// }
+
+fn print_maze(maze: &Vec<bool>) {
     for i in 0..HEIGHT {
         for j in 0..WIDTH {
             let i = i * HEIGHT + j;
-            if path.contains(&i) {
-                print!("{} ", "+".yellow());
-            } else {
-                print!("{} ", if maze[i] { '.' } else { '#' });
-            }
+            print!("{} ", if maze[i] { '.' } else { '#' });
         }
         println!("");
     }
@@ -48,11 +58,11 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
     vis[end] = true;
     vis[end - 1] = true;
 
-    let remain = WIDTH * HEIGHT - 2 * WIDTH - (2 * HEIGHT - 4);
+    let mut remain = WIDTH * HEIGHT - 2 * WIDTH - (2 * HEIGHT - 4);
     while remain > 0 {
         let mut start = WIDTH + 1;
-        let r = start / WIDTH;
-        let c = start % WIDTH;
+        let mut r = start / WIDTH;
+        let mut c = start % WIDTH;
         while vis[start] || r == 0 || r == HEIGHT - 1 || c == 0 || c == WIDTH - 1 {
             start = thread_rng().gen_range(0, WIDTH * HEIGHT);
             r = start / WIDTH;
@@ -61,17 +71,17 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
         let mut cur = start;
 
         while !vis[cur] {
-            let mut d = dir[thread_rng().gen_range(0, 4)];
+            let mut d = DIRECTION_ARRAY[thread_rng().gen_range(0, 4)];
             let mut to = match d {
                 Direction::LEFT => cur - 1,
                 Direction::RIGHT => cur + 1,
                 Direction::UP => cur - WIDTH,
                 Direction::DOWN => cur + WIDTH,
             };
-            let r = to / WIDTH;
-            let c = to % WIDTH;
+            let mut r = to / WIDTH;
+            let mut c = to % WIDTH;
             while r == 0 || r == HEIGHT - 1 || c == 0 || c == WIDTH - 1 {
-                d = dir[thread_rng().gen_range(0, 4)];
+                d = DIRECTION_ARRAY[thread_rng().gen_range(0, 4)];
                 to = match d {
                     Direction::LEFT => cur - 1,
                     Direction::RIGHT => cur + 1,
@@ -84,13 +94,30 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
             dir[start] = d;
             cur = to;
         }
+
+        let to = cur;
+        let mut path_count = 1;
+        cur = start;
+        while cur != to {
+            cur = match dir[cur] {
+                Direction::LEFT => cur - 1,
+                Direction::RIGHT => cur + 1,
+                Direction::UP => cur - WIDTH,
+                Direction::DOWN => cur + WIDTH,
+            };
+            path_count += 1;
+            vis[cur] = true;
+        }
+        vis[end] = true;
+        remain -= path_count;
     }
 
-    maze
+    (maze, start, end)
 }
 
-fn solve(maze: &Vec<bool>, start: usize, end: usize) -> Vec<usize> {}
+// fn solve(maze: &Vec<bool>, start: usize, end: usize) -> Vec<usize> {}
 
 fn main() {
-    loop {}
+    let (maze, start, end) = gen_maze();
+    print_maze(&maze);
 }
