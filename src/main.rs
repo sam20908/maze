@@ -4,8 +4,8 @@ use rand::{thread_rng, Rng};
 
 use std::collections::{HashSet, VecDeque};
 
-const WIDTH: usize = 50usize; // at least 3
-const HEIGHT: usize = 50usize; // at least 3
+const WIDTH: usize = 5usize; // at least 3
+const HEIGHT: usize = 5usize; // at least 3
 
 #[derive(Clone, Copy)]
 enum Direction {
@@ -91,7 +91,7 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
                 r = to / WIDTH;
                 c = to % WIDTH;
             }
-            dir[start] = d;
+            dir[cur] = d;
             cur = to;
         }
 
@@ -99,6 +99,7 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
         let mut path_count = 1;
         cur = start;
         while cur != to {
+            vis[cur] = true;
             cur = match dir[cur] {
                 Direction::LEFT => cur - 1,
                 Direction::RIGHT => cur + 1,
@@ -106,7 +107,6 @@ fn gen_maze() -> (Vec<bool>, usize, usize) {
                 Direction::DOWN => cur + WIDTH,
             };
             path_count += 1;
-            vis[cur] = true;
         }
         vis[end] = true;
         remain -= path_count;
