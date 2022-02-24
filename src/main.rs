@@ -2,10 +2,25 @@ use colored::*;
 use rand::distributions::{Bernoulli, Distribution};
 use rand::{thread_rng, Rng};
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 const WIDTH: usize = 50usize; // at least 3
 const HEIGHT: usize = 50usize; // at least 3
+
+#[derive(Clone)]
+enum Direction {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+}
+
+const DIRECTION_ARRAY: [Direction; 4] = [
+    Direction::LEFT,
+    Direction::RIGHT,
+    Direction::UP,
+    Direction::DOWN,
+];
 
 fn print_maze(maze: &Vec<bool>, path: &Vec<usize>) {
     for i in 0..HEIGHT {
@@ -21,105 +36,61 @@ fn print_maze(maze: &Vec<bool>, path: &Vec<usize>) {
     }
 }
 
-fn gen_maze(maze: &mut Vec<bool>, dist: &Bernoulli) -> (usize, usize) {
+fn gen_maze() -> (Vec<bool>, usize, usize) {
     let start = thread_rng().gen_range(1, HEIGHT - 1) * WIDTH;
-    let end = thread_rng().gen_range(1, HEIGHT - 1) * WIDTH + WIDTH - 1;
-    maze[start] = true;
-    maze[end] = true;
+    let end = thread_rng().gen_range(1, WIDTH - 1) * WIDTH + WIDTH - 1;
+    let mut maze = vec![false; WIDTH * HEIGHT];
+    let mut vis = vec![false; WIDTH * HEIGHT];
+    let mut dir = vec![Direction::DOWN; WIDTH * HEIGHT];
 
-    for i in 1..HEIGHT - 1 {
-        for j in 1..WIDTH - 1 {
-            maze[i * WIDTH + j] = dist.sample(&mut rand::thread_rng());
+    vis[start] = true;
+    vis[start + 1] = true;
+    vis[end] = true;
+    vis[end - 1] = true;
+
+    let remain = WIDTH * HEIGHT - 2 * WIDTH - (2 * HEIGHT - 4);
+    while remain > 0 {
+        let mut start = WIDTH + 1;
+        let r = start / WIDTH;
+        let c = start % WIDTH;
+        while vis[start] || r == 0 || r == HEIGHT - 1 || c == 0 || c == WIDTH - 1 {
+            start = thread_rng().gen_range(0, WIDTH * HEIGHT);
+            r = start / WIDTH;
+            c = start % WIDTH;
+        }
+        let mut cur = start;
+
+        while !vis[cur] {
+            let mut d = dir[thread_rng().gen_range(0, 4)];
+            let mut to = match d {
+                Direction::LEFT => cur - 1,
+                Direction::RIGHT => cur + 1,
+                Direction::UP => cur - WIDTH,
+                Direction::DOWN => cur + WIDTH,
+            };
+            let r = to / WIDTH;
+            let c = to % WIDTH;
+            while r == 0 || r == HEIGHT - 1 || c == 0 || c == WIDTH - 1 {
+                d = dir[thread_rng().gen_range(0, 4)];
+                to = match d {
+                    Direction::LEFT => cur - 1,
+                    Direction::RIGHT => cur + 1,
+                    Direction::UP => cur - WIDTH,
+                    Direction::DOWN => cur + WIDTH,
+                };
+                r = to / WIDTH;
+                c = to % WIDTH;
+            }
+            dir[start] = d;
+            cur = to;
         }
     }
 
-    (start, end)
+    maze
 }
 
-fn solve(
-    maze: &Vec<bool>,
-    start: usize,
-    end: usize,
-    pred: &mut Vec<usize>,
-    vis: &mut Vec<bool>,
-) -> Option<Vec<usize>> {
-    let mut solvable = false;
-    let mut dist = 0;
-
-    let mut q = VecDeque::new();
-    q.push_back(start);
-
-    while !q.is_empty() && !solvable {
-        let mut s = q.len();
-        while s > 0 {
-            s -= 1;
-
-            let pos = q.pop_front().unwrap();
-            if pos == end {
-                solvable = true;
-                break;
-            }
-            vis[pos] = true;
-
-            if maze[pos + 1] && !vis[pos + 1] {
-                pred[pos + 1] = pos;
-                q.push_back(pos + 1);
-            }
-            if maze[pos - WIDTH] && !vis[pos - WIDTH] {
-                pred[pos - WIDTH] = pos;
-                q.push_back(pos - WIDTH);
-            }
-            if maze[pos + WIDTH] && !vis[pos + WIDTH] {
-                pred[pos + WIDTH] = pos;
-                q.push_back(pos + WIDTH);
-            }
-            if pos != start && maze[pos - 1] && !vis[pos - 1] {
-                pred[pos - 1] = pos;
-                q.push_back(pos - 1);
-            }
-        }
-
-        dist += 1;
-    }
-
-    if solvable {
-        let mut path = Vec::with_capacity(dist);
-        let mut pos = end;
-        while pred[pos] != usize::MAX {
-            path.push(pos);
-            pos = pred[pos];
-        }
-        path.push(start);
-
-        Some(path)
-    } else {
-        None
-    }
-}
+fn solve(maze: &Vec<bool>, start: usize, end: usize) -> Vec<usize> {}
 
 fn main() {
-    let mut maze = vec![false; WIDTH * HEIGHT]; // false indicates wall, true indicates clear path
-    let mut pred = vec![usize::MAX; WIDTH * HEIGHT];
-    let mut vis = vec![false; WIDTH * HEIGHT];
-
-    let dist = Bernoulli::new(0.7).expect("Bernoulli distribution failed!");
-
-    loop {
-        maze[0..WIDTH].fill(false);
-        let i = (HEIGHT - 1) * WIDTH;
-        maze[i..i + WIDTH].fill(false);
-        for i in 1..HEIGHT - 1 {
-            let j = i * WIDTH;
-            maze[j] = false;
-            maze[j + WIDTH - 1] = false;
-        }
-
-        vis.fill(false);
-
-        let (start, end) = gen_maze(&mut maze, &dist);
-        if let Some(path) = solve(&maze, start, end, &mut pred, &mut vis) {
-            print_maze(&maze, &path);
-            break;
-        }
-    }
+    loop {}
 }
