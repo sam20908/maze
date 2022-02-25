@@ -1,8 +1,8 @@
 use rand::{thread_rng, Rng};
 use std::collections::*;
 
-const WIDTH: usize = 5usize; // at least 1
-const HEIGHT: usize = 5usize; // at least 1
+const WIDTH: usize = 100usize; // at least 1
+const HEIGHT: usize = 100usize; // at least 1
 
 #[derive(Clone, Copy)]
 enum Direction {
@@ -87,8 +87,8 @@ fn print_maze(maze: &Vec<Vec<usize>>, path: &VecDeque<usize>) {
 // }
 
 fn gen_maze() -> (Vec<Vec<usize>>, usize, usize) {
-    let start = thread_rng().gen_range(0..HEIGHT) * WIDTH;
-    let end = thread_rng().gen_range(0..HEIGHT) * WIDTH + WIDTH - 1;
+    let start = thread_rng().gen_range(0, HEIGHT) * WIDTH;
+    let end = thread_rng().gen_range(0, HEIGHT) * WIDTH + WIDTH - 1;
     let mut maze = vec![vec![]; WIDTH * HEIGHT];
     let mut vis = vec![false; WIDTH * HEIGHT];
     let mut dir = vec![Direction::DOWN; WIDTH * HEIGHT];
@@ -96,14 +96,14 @@ fn gen_maze() -> (Vec<Vec<usize>>, usize, usize) {
 
     let mut remain = WIDTH * HEIGHT - 1;
     while remain > 0 {
-        let mut from = thread_rng().gen_range(0..WIDTH * HEIGHT);
+        let mut from = thread_rng().gen_range(0, WIDTH * HEIGHT);
         while vis[from] {
-            from = thread_rng().gen_range(0..WIDTH * HEIGHT);
+            from = thread_rng().gen_range(0, WIDTH * HEIGHT);
         }
 
         let mut cur = from;
         while !vis[cur] {
-            let d = DIRECTION_ARRAY[thread_rng().gen_range(0..4)];
+            let d = DIRECTION_ARRAY[thread_rng().gen_range(0, 4)];
             let r = cur / WIDTH;
             let c = cur % WIDTH;
             let to = match d {
