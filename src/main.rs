@@ -1,8 +1,8 @@
 use rand::{thread_rng, Rng};
 use std::collections::*;
 
-const WIDTH: usize = 100usize; // at least 1
-const HEIGHT: usize = 100usize; // at least 1
+const WIDTH: usize = 30usize; // at least 1
+const HEIGHT: usize = 30usize; // at least 1
 
 #[derive(Clone, Copy)]
 enum Direction {
@@ -61,30 +61,6 @@ fn print_maze(maze: &Vec<Vec<usize>>, path: &VecDeque<usize>) {
     }
     println!();
 }
-
-// fn print_maze(maze: &Vec<bool>, path: &Vec<usize>) {
-//     for i in 0..HEIGHT {
-//         for j in 0..WIDTH {
-//             let i = i * HEIGHT + j;
-//             if path.contains(&i) {
-//                 print!("{} ", "+".yellow());
-//             } else {
-//                 print!("{} ", if maze[i] { '.' } else { '#' });
-//             }
-//         }
-//         println!("");
-//     }
-// }
-
-// fn print_maze(maze: &Vec<bool>) {
-//     for i in 0..HEIGHT {
-//         for j in 0..WIDTH {
-//             let i = i * HEIGHT + j;
-//             print!("{} ", if maze[i] { '.' } else { '#' });
-//         }
-//         println!("");
-//     }
-// }
 
 fn gen_maze() -> (Vec<Vec<usize>>, usize, usize) {
     let start = thread_rng().gen_range(0, HEIGHT) * WIDTH;
